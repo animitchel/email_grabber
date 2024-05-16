@@ -140,7 +140,7 @@ for email_id in data[0].split()[::-1]:  # Reverse the order of email IDs:
         """
 
         if '-' not in description:
-            if '_' in description:
+            if '_' in description or 'Airtime' in description:
                 category, new_float_amount, description, all_trans_bud = \
                     transaction_income_form_data(description, amount, all_trans_bud=True)
             else:
