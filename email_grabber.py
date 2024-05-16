@@ -5,13 +5,15 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import time
 import datetime
+from expenses_category import EXPENSE_CATEGORIES
+from sent_requests import sent_requests
 
 load_dotenv()
 
 # Connect to Gmail's IMAP server
 mail = imaplib.IMAP4_SSL('imap.gmail.com')
 
-time.sleep(5)
+time.sleep(1)
 
 mail.login(os.getenv('USER_EMAIL'), password=os.getenv('USER_EMAIL_APP_PASSWORD'))
 
@@ -27,13 +29,33 @@ today_date = today.strftime("%d-%b-%Y")
 # Search for emails received since the calculated date
 result, data = mail.search(None, f'(SINCE "{today_date}" FROM "Globus Bank Ltd")')
 
-# Search for emails
-# result, data = mail.search(None, 'ALL')
+payload = {}
+
+
+def transaction_income_form_data(
+        description_str, amount_str, expenses_categories=EXPENSE_CATEGORIES, all_trans_bud=False):
+    try:
+        category_name = next(category for category in expenses_categories if category in description_str)
+    except StopIteration:
+        category_name = 'Other'
+
+    amount_list = [char for char in amount_str if char.isdigit() or char == '.']
+
+    amount_joint_str = ''.join(amount_list)
+    new_amount = float(amount_joint_str)
+
+    amount_list.clear()
+
+    # print( f"description: {description_str}, amount: {new_amount}, category: {category_name}, all_trans_bud: {
+    # all_trans_bud}" )
+
+    return category_name, new_amount, description_str, all_trans_bud
+
 
 # Iterate over email IDs
 for email_id in data[0].split()[::-1]:  # Reverse the order of email IDs:
     # Fetch the email
-    result, msg_data = mail.fetch(email_id, '(RFC822)')
+    result_str, msg_data = mail.fetch(email_id, '(RFC822)')
     raw_email = msg_data[0][1]
 
     # Parse the email message
@@ -46,10 +68,8 @@ for email_id in data[0].split()[::-1]:  # Reverse the order of email IDs:
     content = msg.get_payload()
 
     # Process the email as needed
-    if 'Globus' in sender:
-        # print(f"From: {sender}, Subject: {subject}, Date: {date}")
-        # print(content)
-
+    if 'Globus' in sender and 'Debit' in subject:
+        # or 'Credit' in subject
         # Initialize variables to store plain text and HTML content
         plain_text_content = ''
         html_content = ''
@@ -64,31 +84,19 @@ for email_id in data[0].split()[::-1]:  # Reverse the order of email IDs:
                 # HTML content
                 html_content += part.get_payload(decode=True).decode('utf-8')
 
-        # Print or process the structured content as needed
-        # print(f"From: {sender}, Subject: {subject}, Date: {date}")
-        # print("Plain Text Content:")
-        # print(plain_text_content)
-        # print("HTML Content:")
-        # print(html_content)
-
-        # Assume 'html_content' contains the HTML content of an email
         # Parse the HTML content using Beautiful Soup
         soup = BeautifulSoup(html_content, 'html.parser')
         # plain_text = soup.prettify()
         # print(plain_text)
 
         # Find specific elements in the HTML content
-        # Example: Extract the text from all <p> tags
-        # paragraphs = soup.find_all('table tr tb')
-        # for p in paragraphs:
-        #     print(p.text)
 
         description_td = soup.find('td', class_='editable html',
                                    string=lambda string: string and "Description" in string)
         transaction_amount_td = soup.find('td', class_='editable',
                                           string=lambda string: string and "Transaction Amount" in string)
 
-        # If the description_td is found, get the text content of the next <td> element
+
         def elements_to_string(element, class_name, element_name, func_name):
 
             if element:
@@ -96,32 +104,65 @@ for email_id in data[0].split()[::-1]:  # Reverse the order of email IDs:
                 if value_td:
                     value = value_td.get_text(strip=True)
                     if func_name == 'description_td':
-                        print(value.strip("9013435231"))
+                        description = value.strip("9013435231")
+                        return description
+
                     if func_name == 'transaction_amount':
-                        print(value.strip("-NGN").strip(","))
+                        amount = value.strip("-NGN").strip(",")
+                        return amount
                 else:
                     print("Value not found")
             else:
                 print("Description not found")
 
-        elements_to_string(element=description_td, class_name='editable html', element_name='td', func_name='description_td')
-        elements_to_string(element=transaction_amount_td, class_name='editable', element_name='td', func_name='transaction_amount')
 
-        print(f"From: {sender}, Subject: {subject}, Date: {date}")
-        # print("Plain Text Content:")
-        # print(plain_text_content)
-        # print("HTML Content:")
-        # print(html_content)
+        description = elements_to_string(
+            element=description_td,
+            class_name='editable html',
+            element_name='td',
+            func_name='description_td'
+        )
 
-        # if description_td:
-        #     value_td = description_td.find_next('td', class_='editable html')
-        #     if value_td:
-        #         value = value_td.get_text(strip=True)
-        #         print(value)
-        #     else:
-        #         print("Value not found")
-        # else:
-        #     print("Description not found")
+        amount = elements_to_string(
+            element=transaction_amount_td,
+            class_name='editable',
+            element_name='td',
+            func_name='transaction_amount'
+        )
+
+        """
+        NOTICE!!!
+        
+            - skip transaction
+            
+            _ take from All Transaction Budget attach to transaction
+        
+        """
+
+        if '-' not in description:
+            if '_' in description:
+                category, new_float_amount, description, all_trans_bud = \
+                    transaction_income_form_data(description, amount, all_trans_bud=True)
+            else:
+                category, new_float_amount, description, all_trans_bud = \
+                    transaction_income_form_data(description, amount)
+
+            # print(category, new_float_amount, description, all_trans_bud)
+
+            payload['category'] = category
+            payload['amount'] = new_float_amount
+            payload['description'] = description
+            payload['is_all_trans_bud'] = all_trans_bud
+
+            sent_requests(payload)
+
+            payload.clear()
+
+            # Print or process the structured content as needed
+            # print("Plain Text Content:")
+            # print(plain_text_content)
+            # print("HTML Content:")
+            # print(html_content)
 
 # Logout from the server
 mail.logout()
