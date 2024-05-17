@@ -158,3 +158,29 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+instance/posts.db
+.idea
+__pycache__
+
+.
+..
+
+# This is a gitignore file. Folders and file types in here will not
+# be added to version control and will not be uploaded to Github.
+# For example we ignore the hidden files from Pycharm and VS Code.
+.idea/
+.vscode
+
+### Also any macOS specific files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+# and thumbnails
+._*
+
+# People have already very handy .gitignore templates for Python projects.
+# Below is this one here: https://github.com/github/gitignore/blob/main/Python.gitignore
+# Byte-compiled / optimized / DLL files
+

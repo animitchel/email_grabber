@@ -21,13 +21,13 @@ mail.login(os.getenv('USER_EMAIL'), password=os.getenv('USER_EMAIL_APP_PASSWORD'
 mail.select('inbox')
 
 # Calculate the date for SINCE criterion (e.g., one day ago)
-# since_date = datetime.datetime.now() - datetime.timedelta(days=1)
-today = datetime.date.today()
-# since_date_str = since_date.strftime("%d-%b-%Y")  # Format the date according to IMAP's date format
-today_date = today.strftime("%d-%b-%Y")
+since_date = datetime.datetime.now() - datetime.timedelta(days=1)
+# today = datetime.date.today()
+since_date_str = since_date.strftime("%d-%b-%Y")  # Format the date according to IMAP's date format
+# today_date = today.strftime("%d-%b-%Y")
 
 # Search for emails received since the calculated date
-result, data = mail.search(None, f'(SINCE "{today_date}" FROM "Globus Bank Ltd")')
+result, data = mail.search(None, f'(SINCE "{since_date_str}" FROM "Globus Bank Ltd")')
 
 payload = {}
 

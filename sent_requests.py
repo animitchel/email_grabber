@@ -17,8 +17,10 @@ def sent_requests(data_payload):
                 return csrf_token
             else:
                 print(f"Failed to retrieve CSRF token. Status code: {response.status_code}")
+                print('retrying...')
+                get_csrf_token(session, url)
 
-                return None
+                # return None
         except Exception as e:
             print(f"An error occurred: {str(e)}")
             return None
