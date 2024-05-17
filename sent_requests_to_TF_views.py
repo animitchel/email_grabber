@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
+import time
 
 load_dotenv()
 
@@ -9,6 +10,7 @@ load_dotenv()
 def get_csrf_token(session, url):
     try:
         response = session.get(url)
+        time.sleep(50)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
             csrf_token = soup.find('input', {'name': 'csrfmiddlewaretoken'}).get('value')
