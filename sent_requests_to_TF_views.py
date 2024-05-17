@@ -10,7 +10,6 @@ load_dotenv()
 def get_csrf_token(session, url):
     try:
         response = session.get(url)
-        time.sleep(50)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
             csrf_token = soup.find('input', {'name': 'csrfmiddlewaretoken'}).get('value')
@@ -18,6 +17,7 @@ def get_csrf_token(session, url):
         else:
             print(f"Failed to retrieve CSRF token. Status code: {response.status_code}")
             print('retrying...')
+            time.sleep(30)
             get_csrf_token(session, url)
 
             # return None
