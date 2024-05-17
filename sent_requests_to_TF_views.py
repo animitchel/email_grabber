@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
-import time
 
 load_dotenv()
 
@@ -17,7 +16,6 @@ def get_csrf_token(session, url):
         else:
             print(f"Failed to retrieve CSRF token. Status code: {response.status_code}")
             print('retrying...')
-            time.sleep(30)
             get_csrf_token(session, url)
 
             # return None
