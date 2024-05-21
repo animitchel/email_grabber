@@ -8,6 +8,7 @@ import datetime
 from expenses_category import EXPENSE_CATEGORIES
 from sent_requests import sent_requests
 
+
 load_dotenv()
 
 # Connect to Gmail's IMAP server
@@ -21,13 +22,13 @@ mail.login(os.getenv('USER_EMAIL'), password=os.getenv('USER_EMAIL_APP_PASSWORD'
 mail.select('inbox')
 
 # Calculate the date for SINCE criterion (e.g., one day ago)
-# since_date = datetime.datetime.now() - datetime.timedelta(days=1)
-today = datetime.date.today()
-# since_date_str = since_date.strftime("%d-%b-%Y")  # Format the date according to IMAP's date format
-today_date = today.strftime("%d-%b-%Y")
+since_date = datetime.datetime.now() - datetime.timedelta(days=1)
+# today = datetime.date.today()
+since_date_str = since_date.strftime("%d-%b-%Y")  # Format the date according to IMAP's date format
+# today_date = today.strftime("%d-%b-%Y")
 
 # Search for emails received since the calculated date
-result, data = mail.search(None, f'(SINCE "{today_date}" FROM "Globus Bank Ltd")')
+result, data = mail.search(None, f'(SINCE "{since_date_str}" FROM "Globus Bank Ltd")')
 
 payload = {}
 
@@ -68,8 +69,7 @@ for email_id in data[0].split()[::-1]:  # Reverse the order of email IDs:
     content = msg.get_payload()
 
     # Process the email as needed
-    if 'Globus' in sender and 'Debit' in subject:
-        # or 'Credit' in subject
+    if 'Globus' in sender and 'Debit' in subject or 'Credit' in subject:
         # Initialize variables to store plain text and HTML content
         plain_text_content = ''
         html_content = ''
@@ -139,7 +139,7 @@ for email_id in data[0].split()[::-1]:  # Reverse the order of email IDs:
         
         """
 
-        if '-' not in description:
+        if '-' not in description or 'Credit' in subject:
             if '_' in description or 'Airtime' in description:
                 category, new_float_amount, description, all_trans_bud = \
                     transaction_income_form_data(description, amount, all_trans_bud=True)
@@ -154,7 +154,14 @@ for email_id in data[0].split()[::-1]:  # Reverse the order of email IDs:
             payload['description'] = description
             payload['is_all_trans_bud'] = all_trans_bud
 
-            sent_requests(payload)
+            if 'Credit' in subject:
+                payload['category'] = "business income"
+                payload['notes'] = description
+                payload.pop('is_all_trans_bud')
+                payload.pop('description')
+                sent_requests(payload, income_post_request=True)
+            else:
+                sent_requests(payload)
 
             payload.clear()
 

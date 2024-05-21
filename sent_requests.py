@@ -7,7 +7,7 @@ import os
 load_dotenv()
 
 
-def sent_requests(data_payload):
+def sent_requests(data_payload, income_post_request=False):
     def get_csrf_token(session, url):
         try:
             response = session.get(url)
@@ -89,23 +89,27 @@ def sent_requests(data_payload):
 
         endpoint = ['budget-overview/', 'recurring-transactions/', 'recurring-incomes/', 'notifications/']
         for i in range(len(endpoint)):
-            res = session.get(url=f'https://track-finance.onrender.com/{endpoint[i]}', allow_redirects=True)
-            # res = session.get(url=f'http://127.0.0.1:8000/{endpoint[i]}', allow_redirects=True)
+            session.get(url=f'https://track-finance.onrender.com/{endpoint[i]}', allow_redirects=True)
+            # session.get(url=f'http://127.0.0.1:8000/{endpoint[i]}', allow_redirects=True)
 
-        # data = {
-        #     'category': 'Transportation',
-        #     'amount': 2000.0,
-        #     'description': 'Test the bot tyt your Transportation',
-        #     'is_all_trans_bud': False,
-        # }
-        # for i in range(len(endpoint)):
-        post_request(
-            url='https://track-finance.onrender.com/add_transactions/',
-            # url='http://127.0.0.1:8000/add_transactions/',
-            session_object=session,
-            payload=data_payload
+        if income_post_request:
+            post_request(
+                url='https://track-finance.onrender.com/add-income/',
+                # url='http://127.0.0.1:8000/add-income/',
+                session_object=session,
+                payload=data_payload
 
-        )
+            )
+
+        else:
+            post_request(
+                url='https://track-finance.onrender.com/add_transactions/',
+                # url='http://127.0.0.1:8000/add_transactions/',
+                session_object=session,
+                payload=data_payload
+
+            )
 
     else:
         print("Login failed. Please check your credentials.")
+
