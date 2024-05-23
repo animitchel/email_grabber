@@ -1,8 +1,10 @@
 # import chardet
+import os
+import time
+
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-import os
 
 load_dotenv()
 
@@ -85,12 +87,13 @@ def sent_requests(data_payload, income_post_request=False):
 
     session = login(login_url, username, password)
     if session:
-        print("Login successful!")
 
         endpoint = ['budget-overview/', 'recurring-transactions/', 'recurring-incomes/', 'notifications/']
         for i in range(len(endpoint)):
             session.get(url=f'https://track-finance.onrender.com/{endpoint[i]}', allow_redirects=True)
             # session.get(url=f'http://127.0.0.1:8000/{endpoint[i]}', allow_redirects=True)
+
+        start_time = time.time()
 
         if income_post_request:
             post_request(
@@ -109,7 +112,10 @@ def sent_requests(data_payload, income_post_request=False):
                 payload=data_payload
 
             )
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+
+        print(f"Request job ran successfully! in {elapsed_time} seconds")
 
     else:
         print("Login failed. Please check your credentials.")
-

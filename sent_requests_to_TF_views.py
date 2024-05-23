@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
+import time
 
 load_dotenv()
 
@@ -64,13 +65,23 @@ password = os.environ.get('LOGIN_PASSWORD')
 session = login(login_url, username, password)
 
 if session:
-    print("Login successful!")
 
-    endpoint = ['budget-overview/', 'recurring-transactions/', 'recurring-incomes/', 'notifications/']
+    start_time = time.time()
+
+    endpoint = [
+        'budget-overview/', 'recurring-transactions/', 'recurring-incomes/', 'notifications/', 'linechart/',
+        'barchart/',
+        'add-budget/', 'overview/', 'categories/', 'income-category/', 'expense-reports-form/'
+    ]
+
     for i in range(len(endpoint)):
         res = session.get(url=f'https://track-finance.onrender.com/{endpoint[i]}', allow_redirects=True)
         # res = session.get(url=f'http://127.0.0.1:8000/{endpoint[i]}', allow_redirects=True)
         # print(res.text)
 
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+
+    print(f"Request job ran successfully! in {elapsed_time} seconds")
 else:
     print("Login failed. Please check your credentials.")
