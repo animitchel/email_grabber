@@ -69,9 +69,8 @@ if session:
     start_time = time.time()
 
     endpoint = [
-        'budget-overview/', 'recurring-transactions/', 'recurring-incomes/', 'notifications/', 'linechart/',
-        'barchart/',
-        'add-budget/', 'overview/', 'categories/', 'income-category/', 'expense-reports-form/'
+        'budget-overview/', 'recurring-transactions/', 'recurring-incomes/', 'notifications/',
+        'overview/',
     ]
 
     for i in range(len(endpoint)):
